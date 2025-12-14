@@ -173,38 +173,44 @@ let quotes = [
 
   const SERVER_URL = "https://jsonplaceholder.typicode.com/posts";
 
-  async function fetchServerQuotes() {
-    const response = await fetch(SERVER_URL);
-    const data = await response.json();
-  
-    // Convert posts to quotes format
-    return data.slice(0, 5).map(post => ({
-      text: post.title,
-      category: "Server"
-    }));
+/* STEP 3: Fetch quotes from server (ALX-required name) */
+async function fetchQuotesFromServer() {
+  const response = await fetch(SERVER_URL);
+  const data = await response.json();
+
+  // Convert posts to quotes format
+  return data.slice(0, 5).map(post => ({
+    text: post.title,
+    category: "Server"
+  }));
+}
+
+/* STEP 3: Sync and resolve conflicts */
+async function syncWithServer() {
+  const status = document.getElementById("syncStatus");
+  status.textContent = "Syncing with server...";
+
+  try {
+    const serverQuotes = await fetchQuotesFromServer();
+
+    // Conflict resolution: server takes precedence
+    quotes = serverQuotes;
+
+    saveQuotes();
+    populateCategories();
+    filterQuotes();
+
+    status.textContent = "✅ Synced successfully. Server data applied.";
+  } catch (error) {
+    status.textContent = "❌ Sync failed. Please try again.";
+    console.error(error);
   }
-  async function syncWithServer() {
-    const status = document.getElementById("syncStatus");
-    status.textContent = "Syncing with server...";
-  
-    try {
-      const serverQuotes = await fetchServerQuotes();
-  
-      // Conflict resolution: server takes precedence
-      quotes = serverQuotes;
-  
-      saveQuotes();
-      populateCategories();
-      filterQuotes();
-  
-      status.textContent = "✅ Synced successfully. Server data applied.";
-    } catch (error) {
-      status.textContent = "❌ Sync failed. Please try again.";
-      console.error(error);
-    }
-  }
-  function manualSync() {
-    syncWithServer();
-  }
-  // Auto-sync every 30 seconds
+}
+
+/* Manual sync option */
+function manualSync() {
+  syncWithServer();
+}
+
+/* Auto-sync every 30 seconds */
 setInterval(syncWithServer, 30000);
