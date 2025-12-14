@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dynamic Quote Generator</title>
+
+    <style>
+        
+    </style>
   </head>
   <body>
 
@@ -13,7 +17,7 @@
   <select id="categoryFilter" onchange="filterQuotes()">
     <option value="all">All Categories</option>
   </select>
-  
+
     <div id="quoteDisplay"></div>
     <button id="newQuote">Show New Quote</button>
 
@@ -33,6 +37,11 @@
         accept=".json"
         onchange="importFromJsonFile(event)"
       />
+
+      <div id="syncStatus" style="margin-top: 10px; color: green;"></div>
+
+<button onclick="manualSync()">Sync with Server</button>
+
 
 
     <script src="script.js"></script>

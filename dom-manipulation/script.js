@@ -170,4 +170,41 @@ let quotes = [
   // Initialize UI
   populateCategories();
   filterQuotes();
+
+  const SERVER_URL = "https://jsonplaceholder.typicode.com/posts";
+
+  async function fetchServerQuotes() {
+    const response = await fetch(SERVER_URL);
+    const data = await response.json();
   
+    // Convert posts to quotes format
+    return data.slice(0, 5).map(post => ({
+      text: post.title,
+      category: "Server"
+    }));
+  }
+  async function syncWithServer() {
+    const status = document.getElementById("syncStatus");
+    status.textContent = "Syncing with server...";
+  
+    try {
+      const serverQuotes = await fetchServerQuotes();
+  
+      // Conflict resolution: server takes precedence
+      quotes = serverQuotes;
+  
+      saveQuotes();
+      populateCategories();
+      filterQuotes();
+  
+      status.textContent = "✅ Synced successfully. Server data applied.";
+    } catch (error) {
+      status.textContent = "❌ Sync failed. Please try again.";
+      console.error(error);
+    }
+  }
+  function manualSync() {
+    syncWithServer();
+  }
+  // Auto-sync every 30 seconds
+setInterval(syncWithServer, 30000);
