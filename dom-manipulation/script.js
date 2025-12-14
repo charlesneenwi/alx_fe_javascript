@@ -220,7 +220,8 @@ async function syncQuotes() {
     populateCategories();
     filterQuotes();
 
-    status.textContent = "✅ Data synced. Conflicts resolved using server data.";
+    status.textContent = "Quotes synced with server!";
+
   } catch (error) {
     status.textContent = "❌ Sync failed.";
     console.error(error);
