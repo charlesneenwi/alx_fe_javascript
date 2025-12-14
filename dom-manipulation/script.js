@@ -173,60 +173,64 @@ let quotes = [
   
   /* STEP 3: Server Sync & Conflict Resolution */
   
-  const SERVER_URL = "https://jsonplaceholder.typicode.com/posts";
-  
-  /* REQUIRED BY ALX */
-  async function fetchQuotesFromServer() {
-    const response = await fetch(SERVER_URL);
-    const data = await response.json();
-  
-    return data.slice(0, 5).map(post => ({
-      text: post.title,
-      category: "Server"
-    }));
+  /* STEP 3: Server Sync & Conflict Resolution */
+
+const SERVER_URL = "https://jsonplaceholder.typicode.com/posts";
+
+/* Fetch quotes from mock server */
+async function fetchQuotesFromServer() {
+  const response = await fetch(SERVER_URL);
+  const data = await response.json();
+
+  return data.slice(0, 5).map(post => ({
+    text: post.title,
+    category: "Server"
+  }));
+}
+
+/* Post quote to mock server */
+async function postQuoteToServer(quote) {
+  try {
+    await fetch(SERVER_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(quote)
+    });
+  } catch (error) {
+    console.error("Post failed:", error);
   }
-  
-  /* REQUIRED POST IMPLEMENTATION */
-  async function postQuoteToServer(quote) {
-    try {
-      await fetch(SERVER_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(quote)
-      });
-    } catch (error) {
-      console.error("Post failed:", error);
-    }
+}
+
+/* REQUIRED BY ALX */
+async function syncQuotes() {
+  const status = document.getElementById("syncStatus");
+  status.textContent = "Syncing with server...";
+
+  try {
+    const serverQuotes = await fetchQuotesFromServer();
+
+    // Conflict resolution: server data wins
+    quotes = serverQuotes;
+
+    // Update local storage
+    saveQuotes();
+
+    populateCategories();
+    filterQuotes();
+
+    status.textContent = "✅ Data synced. Conflicts resolved using server data.";
+  } catch (error) {
+    status.textContent = "❌ Sync failed.";
+    console.error(error);
   }
-  
-  /* Sync + Conflict Resolution (Server Wins) */
-  async function syncWithServer() {
-    const status = document.getElementById("syncStatus");
-    status.textContent = "Syncing with server...";
-  
-    try {
-      const serverQuotes = await fetchQuotesFromServer();
-      quotes = serverQuotes; // server takes precedence
-      saveQuotes();
-      populateCategories();
-      filterQuotes();
-      status.textContent = "✅ Synced successfully. Server data applied.";
-    } catch (error) {
-      status.textContent = "❌ Sync failed.";
-    }
-  }
-  
-  /* Manual sync option */
-  function manualSync() {
-    syncWithServer();
-  }
-  
-  /* Auto-sync every 30 seconds */
-  setInterval(syncWithServer, 30000);
-  
-  /* Initialize UI */
-  populateCategories();
-  filterQuotes();
-  
+}
+
+/* Manual sync option */
+function manualSync() {
+  syncQuotes();
+}
+
+/* Periodic sync every 30 seconds */
+setInterval(syncQuotes, 30000);
