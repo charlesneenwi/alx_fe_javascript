@@ -107,10 +107,12 @@ let quotes = [
       const category = categoryInput.value.trim();
   
       if (text && category) {
-        quotes.push({ text, category });
+        const newQuote = { text, category };
+        quotes.push(newQuote);
         saveQuotes();
         populateCategories();
         filterQuotes();
+        postQuoteToServer(newQuote);
         alert("Quote added!");
         textInput.value = "";
         categoryInput.value = "";
@@ -130,10 +132,12 @@ let quotes = [
     const category = document.getElementById("newQuoteCategory").value.trim();
   
     if (text && category) {
-      quotes.push({ text, category });
+      const newQuote = { text, category };
+      quotes.push(newQuote);
       saveQuotes();
       populateCategories();
       filterQuotes();
+      postQuoteToServer(newQuote);
       alert("Quote added!");
     }
   }
@@ -167,50 +171,62 @@ let quotes = [
     reader.readAsText(event.target.files[0]);
   }
   
-  // Initialize UI
+  /* STEP 3: Server Sync & Conflict Resolution */
+  
+  const SERVER_URL = "https://jsonplaceholder.typicode.com/posts";
+  
+  /* REQUIRED BY ALX */
+  async function fetchQuotesFromServer() {
+    const response = await fetch(SERVER_URL);
+    const data = await response.json();
+  
+    return data.slice(0, 5).map(post => ({
+      text: post.title,
+      category: "Server"
+    }));
+  }
+  
+  /* REQUIRED POST IMPLEMENTATION */
+  async function postQuoteToServer(quote) {
+    try {
+      await fetch(SERVER_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(quote)
+      });
+    } catch (error) {
+      console.error("Post failed:", error);
+    }
+  }
+  
+  /* Sync + Conflict Resolution (Server Wins) */
+  async function syncWithServer() {
+    const status = document.getElementById("syncStatus");
+    status.textContent = "Syncing with server...";
+  
+    try {
+      const serverQuotes = await fetchQuotesFromServer();
+      quotes = serverQuotes; // server takes precedence
+      saveQuotes();
+      populateCategories();
+      filterQuotes();
+      status.textContent = "✅ Synced successfully. Server data applied.";
+    } catch (error) {
+      status.textContent = "❌ Sync failed.";
+    }
+  }
+  
+  /* Manual sync option */
+  function manualSync() {
+    syncWithServer();
+  }
+  
+  /* Auto-sync every 30 seconds */
+  setInterval(syncWithServer, 30000);
+  
+  /* Initialize UI */
   populateCategories();
   filterQuotes();
-
-  const SERVER_URL = "https://jsonplaceholder.typicode.com/posts";
-
-/* STEP 3: Fetch quotes from server (ALX-required name) */
-async function fetchQuotesFromServer() {
-  const response = await fetch(SERVER_URL);
-  const data = await response.json();
-
-  // Convert posts to quotes format
-  return data.slice(0, 5).map(post => ({
-    text: post.title,
-    category: "Server"
-  }));
-}
-
-/* STEP 3: Sync and resolve conflicts */
-async function syncWithServer() {
-  const status = document.getElementById("syncStatus");
-  status.textContent = "Syncing with server...";
-
-  try {
-    const serverQuotes = await fetchQuotesFromServer();
-
-    // Conflict resolution: server takes precedence
-    quotes = serverQuotes;
-
-    saveQuotes();
-    populateCategories();
-    filterQuotes();
-
-    status.textContent = "✅ Synced successfully. Server data applied.";
-  } catch (error) {
-    status.textContent = "❌ Sync failed. Please try again.";
-    console.error(error);
-  }
-}
-
-/* Manual sync option */
-function manualSync() {
-  syncWithServer();
-}
-
-/* Auto-sync every 30 seconds */
-setInterval(syncWithServer, 30000);
+  
